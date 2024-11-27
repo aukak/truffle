@@ -14,7 +14,7 @@ async function sendMessage() {
     const loadingIndicator = document.createElement('p');
     loadingIndicator.classList.add('loading');
     loadingIndicator.innerHTML = `
-        <strong>AI:</strong> 
+        <strong></strong> 
         <span class="dots">
             <span></span>
             <span></span>
