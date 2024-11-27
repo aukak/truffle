@@ -1,8 +1,11 @@
 const chatContainer = document.getElementById('chat-container');
 const userInput = document.getElementById('user-input');
 const sendButton = document.getElementById('send-button');
+const scrollButton = document.getElementById('scroll-toggle-button');
 
 const apiKey = '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';
+
+let scrollDirection = 'down';
 
 async function sendMessage() {
     const userMessage = userInput.value.trim();
