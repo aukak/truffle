@@ -1,1 +1,69 @@
-function AI(e){this.grid=e}AI.prototype.eval=function(){var e=this.grid.availableCells().length;return.1*this.grid.smoothness()+1*this.grid.monotonicity2()+2.7*Math.log(e)+1*this.grid.maxValue()},AI.prototype.search=function(e,i,r,t,o){var s,n,a=-1;if(this.grid.playerTurn){for(var l in s=i,[0,1,2,3])if((I=this.grid.clone()).move(l).moved){if(t++,I.isWin())return{move:l,score:1e4,positions:t,cutoffs:o};var h=new AI(I);if(0==e?n={move:l,score:h.eval()}:((n=h.search(e-1,s,r,t,o)).score>9900&&n.score--,t=n.positions,o=n.cutoffs),n.score>s&&(s=n.score,a=l),s>r)return{move:a,score:r,positions:t,cutoffs:++o}}}else{s=r;var u=[],c=this.grid.availableCells(),f={2:[],4:[]};for(var p in f)for(var v in c){f[p].push(null);var g=c[v],m=new Tile(g,parseInt(p,10));this.grid.insertTile(m),f[p][v]=-this.grid.smoothness()+this.grid.islands(),this.grid.removeTile(g)}var d=Math.max(Math.max.apply(null,f[2]),Math.max.apply(null,f[4]));for(var p in f)for(v=0;v<f[p].length;v++)f[p][v]==d&&u.push({position:c[v],value:parseInt(p,10)});for(v=0;v<u.length;v++){var y=u[v].position,I=(p=u[v].value,this.grid.clone());if(m=new Tile(y,p),I.insertTile(m),I.playerTurn=!0,t++,t=(n=(h=new AI(I)).search(e,i,s,t,o)).positions,o=n.cutoffs,n.score<s&&(s=n.score),s<i)return{move:null,score:i,positions:t,cutoffs:++o}}}return{move:a,score:s,positions:t,cutoffs:o}},AI.prototype.getBest=function(){return this.iterativeDeep()},AI.prototype.iterativeDeep=function(){var e,i=(new Date).getTime(),r=0;do{var t=this.search(r,-1e4,1e4,0,0);if(-1==t.move)break;e=t,r++}while((new Date).getTime()-i<minSearchTime);return e},AI.prototype.translate=function(e){return{0:"up",1:"right",2:"down",3:"left"}[e]};
+const chatContainer = document.getElementById('chat-container');
+const userInput = document.getElementById('user-input');
+const sendButton = document.getElementById('send-button');
+
+const apiKey = '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';
+
+async function sendMessage() {
+    const userMessage = userInput.value.trim();
+    if (userMessage === '') return;
+
+    chatContainer.innerHTML += `<p><strong>You:</strong> ${userMessage}</p>`;
+    userInput.value = '';
+
+    const loadingIndicator = document.createElement('p');
+    loadingIndicator.classList.add('loading');
+    loadingIndicator.innerHTML = `
+        <strong>AI:</strong> 
+        <span class="dots">
+            <span></span>
+            <span></span>
+            <span></span>
+        </span>`;
+    chatContainer.appendChild(loadingIndicator);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    try {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: "mixtral-8x7b-32768",
+                messages: [
+                    { role: "system", content: "You are a helpful AI assistant." },
+                    { role: "user", content: userMessage }
+                ],
+                temperature: 0.9,
+                max_tokens: 1024,
+                stream: false
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const aiResponse = data.choices[0].message.content;
+
+        loadingIndicator.remove();
+        chatContainer.innerHTML += `<p><strong>AI:</strong> ${aiResponse}</p>`;
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    } catch (error) {
+        console.error('Error:', error);
+        loadingIndicator.remove();
+        chatContainer.innerHTML += `<p><strong>Error:</strong> Failed to get AI response. Error details: ${error.message}</p>`;
+    }
+}
+
+sendButton.addEventListener('click', sendMessage);
+
+userInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
